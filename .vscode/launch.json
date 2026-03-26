@@ -1,0 +1,36 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET Core Launch (web)",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/PcStoreApp.csproj",
+            "launchBrowser": {
+                "enabled": true,
+                "args": "${auto-launch-browser}",
+                "windows": {
+                    "command": "cmd.exe",
+                    "args": "/C start ${auto-launch-browser}"
+                },
+                "osx": {
+                    "command": "open"
+                },
+                "linux": {
+                    "command": "xdg-open"
+                }
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "dotnet",
+            "request": "attach"
+        }    
+    ]
+}

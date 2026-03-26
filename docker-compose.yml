@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: pc_store_db
+    restart: always
+    environment:
+      - POSTGRES_DB=pc_store
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password123
+    ports:
+      - "5442:5432"
+    networks:
+      - pc_store_network
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+  web_app:
+    build: .
+    container_name: pc_store_web
+    restart: always
+    ports:
+      - "8085:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=pc_store;Username=admin;Password=password123
+    depends_on:
+      - db
+    networks:
+      - pc_store_network
+
+networks:
+  pc_store_network:
+    driver: bridge
+
+volumes:
+  pgdata:

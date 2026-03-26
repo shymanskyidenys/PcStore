@@ -1,0 +1,25 @@
+﻿@model IEnumerable<Product>
+
+<h2>Наші товари</h2>
+<a asp-action="Create" class="btn btn-primary">Додати новий</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Назва</th>
+            <th>Категорія</th>
+            <th>Ціна</th>
+            <th>Опис</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (Product item in Model) {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.CategoryName</td>
+                <td>@item.Price.ToString("C")</td>
+                <td>@item.Description</td>
+            </tr>
+        }
+    </tbody>
+</table>
