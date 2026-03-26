@@ -17,13 +17,6 @@ public class ProductController : Controller
         return View(products);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Create(Product product)
-    {
-        await _repo.AddProductAsync(product);
-        return RedirectToAction(nameof(Index));
-    }
-
     public async Task<IActionResult> Create()
     {
         var viewModel = new ProductCreateViewModel
