@@ -9,6 +9,6 @@ namespace PcStoreApp.ViewModels
         public string Description { get; set; } = "";
         public int CategoryId { get; set; }
 
-        public List<SelectListItem> Categories { get; set; } = new();
+        public List<SelectListItem> Categories { get; set; } = [];
     }
 }

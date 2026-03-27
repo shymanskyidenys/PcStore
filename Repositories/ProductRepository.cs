@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Npgsql;
 using PcStoreApp.Models;
 
@@ -13,7 +12,7 @@ public class ProductRepository
         _connectionString = configuration.GetConnectionString("DefaultConnection")!;
     }
 
-    public async Task<List<Product>> GetAllProductsAsync()
+    public async Task<List<Product>> GetProductsAsync()
     {
         var products = new List<Product>();
         using var conn = new NpgsqlConnection(_connectionString);
@@ -45,7 +44,7 @@ public class ProductRepository
         return products;
     }
 
-    public async Task AddProductAsync(Product product)
+    public async Task<bool> AddProductAsync(Product product)
     {
         if (product == null)
         {
@@ -69,12 +68,13 @@ public class ProductRepository
         cmd.Parameters.AddWithValue("d", (object)product.Description ?? DBNull.Value);
         cmd.Parameters.AddWithValue("c", product.CategoryId);
 
-        await cmd.ExecuteNonQueryAsync();
+        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+        return rowsAffected > 0;
     }
 
     public async Task<bool> DeleteProductAsync(int productId)
     {
-        if (productId < 0)
+        if (productId <= 0)
         {
             return false;
         }
@@ -91,23 +91,28 @@ public class ProductRepository
         return rowsAffected > 0;
     }
 
-    public async Task<List<SelectListItem>> GetCategoriesForSelectAsync()
+    public async Task<List<Category>> GetCategoriesAsync()
     {
-        var list = new List<SelectListItem>();
+        var categories = new List<Category>();
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        using var cmd = new NpgsqlCommand("SELECT category_id, name FROM Categories ORDER BY name", conn);
+        var sql = @"SELECT category_id,
+                           name
+                    FROM Categories
+                    ORDER BY name";
+
+        using var cmd = new NpgsqlCommand(sql, conn);
         using var reader = await cmd.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())
         {
-            list.Add(new SelectListItem { 
-                Value = reader.GetInt32(0).ToString(), 
-                Text = reader.GetString(1) 
+            categories.Add(new Category { 
+                CategoryId = reader.GetInt32(0),
+                Name = reader.GetString(1)
             });
         }
 
-        return list;
+        return categories;
     }
 }

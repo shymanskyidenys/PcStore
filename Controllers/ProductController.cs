@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using PcStoreApp.Repositories;
 using PcStoreApp.Models;
 using PcStoreApp.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace PcStoreApp.Controllers;
 
@@ -11,18 +12,25 @@ public class ProductController : Controller
 
     public ProductController(ProductRepository repo) { _repo = repo; }
 
+    [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var products = await _repo.GetAllProductsAsync();
+        var products = await _repo.GetProductsAsync();
         return View(products);
     }
 
+    [HttpGet]
     public async Task<IActionResult> Create()
     {
-        var viewModel = new ProductCreateViewModel
+        var categories = await _repo.GetCategoriesAsync();
+        
+        var viewModel = new ProductCreateViewModel();
+        viewModel.Categories = categories.Select(c => new SelectListItem
         {
-            Categories = await _repo.GetCategoriesForSelectAsync()
-        };
+            Value = c.CategoryId.ToString(),
+            Text = c.Name
+        }).ToList();
+
         return View(viewModel);
     }
 
@@ -31,7 +39,13 @@ public class ProductController : Controller
     {
         if (!ModelState.IsValid) 
         {
-            vm.Categories = await _repo.GetCategoriesForSelectAsync();
+            var categories = await _repo.GetCategoriesAsync();
+            vm.Categories = categories.Select(c => new SelectListItem
+            {
+                Value = c.CategoryId.ToString(),
+                Text = c.Name
+            }).ToList();
+
             return View(vm);
         }
 
