@@ -45,4 +45,17 @@ public class ProductController : Controller
         await _repo.AddProductAsync(product);
         return RedirectToAction("Index");
     }
+
+    [HttpPost]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var deleted = await _repo.DeleteProductAsync(id);
+
+        if (deleted)
+        {
+            TempData["Message"] = "Product deleted successfully!";
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
 }
