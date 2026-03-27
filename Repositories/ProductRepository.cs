@@ -62,6 +62,25 @@ public class ProductRepository
         await cmd.ExecuteNonQueryAsync();
     }
 
+    public async Task<bool> DeleteProductAsync(int productId)
+    {
+        if (productId < 0)
+        {
+            return false;
+        }
+
+        using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        var sql = @"DELETE FROM Products WHERE product_id = @id";
+
+        using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("id", productId);
+
+        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+        return rowsAffected > 0;
+    }
+
     public async Task<List<SelectListItem>> GetCategoriesForSelectAsync()
     {
         var list = new List<SelectListItem>();
