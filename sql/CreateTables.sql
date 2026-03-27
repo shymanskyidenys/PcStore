@@ -9,20 +9,30 @@ CREATE TABLE Products (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
-    stock_quantity INT NOT NULL DEFAULT 0,
-    is_component BOOLEAN DEFAULT TRUE
+    stock_quantity INT NOT NULL DEFAULT 0
 );
 
-CREATE TABLE Builds (
-    build_id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    total_price DECIMAL(10, 2) DEFAULT 0,
-    description TEXT
+CREATE TABLE Attributes (
+    attribute_id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
 );
 
-CREATE TABLE Build_Items (
-    build_id INT REFERENCES Builds(build_id) ON DELETE CASCADE,
-    product_id INT REFERENCES Products(product_id),
-    quantity INT DEFAULT 1,
-    PRIMARY KEY (build_id, product_id)
+CREATE TABLE AttributeValues (
+    value_id SERIAL PRIMARY KEY,
+    attribute_id INT REFERENCES Attributes(attribute_id),
+    value VARCHAR(100) NOT NULL,
+    UNIQUE(attribute_id, value)
+);
+
+CREATE TABLE Product_Attributes (
+    product_id INT REFERENCES Products(product_id) ON DELETE CASCADE,
+    value_id INT REFERENCES AttributeValues(value_id) ON DELETE CASCADE,
+    PRIMARY KEY (product_id, value_id)
+);
+
+CREATE TABLE Product_Components (
+    parent_product_id INT REFERENCES Products(product_id) ON DELETE CASCADE,
+    child_product_id INT REFERENCES Products(product_id),
+    quantity INT DEFAULT 1 CHECK (quantity > 0),
+    PRIMARY KEY (parent_product_id, child_product_id)
 );
