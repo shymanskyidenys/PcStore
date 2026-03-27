@@ -1,24 +1,24 @@
 ﻿@model IEnumerable<Product>
 
-<h2>Наші товари</h2>
+<h2>Products</h2>
 
 @if (TempData["Message"] != null)
 {
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <div class="alert alert-success" role="alert">
         @TempData["Message"]
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
 
-<a asp-action="Create" class="btn btn-primary">Додати новий</a>
+<a asp-action="Create" class="btn btn-primary">Add product</a>
 
 <table class="table">
     <thead>
         <tr>
-            <th>Назва</th>
-            <th>Категорія</th>
-            <th>Ціна</th>
-            <th>Опис</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Description</th>
             <th></th>
         </tr>
     </thead>
