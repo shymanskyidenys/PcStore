@@ -47,6 +47,16 @@ public class ProductRepository
 
     public async Task AddProductAsync(Product product)
     {
+        if (product == null)
+        {
+            throw new ArgumentNullException("Product cannot be null");
+        }
+
+        if (string.IsNullOrWhiteSpace(product.Name))
+        {
+            throw new ArgumentException("Product name is required", nameof(product.Name));
+        }
+
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
 
@@ -56,9 +66,9 @@ public class ProductRepository
         using var cmd = new NpgsqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("n", product.Name);
         cmd.Parameters.AddWithValue("p", product.Price);
-        cmd.Parameters.AddWithValue("d", product.Description);
+        cmd.Parameters.AddWithValue("d", (object)product.Description ?? DBNull.Value);
         cmd.Parameters.AddWithValue("c", product.CategoryId);
-        
+
         await cmd.ExecuteNonQueryAsync();
     }
 
