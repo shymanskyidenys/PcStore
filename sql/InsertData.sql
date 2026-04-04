@@ -10,15 +10,7 @@ INSERT INTO Categories (name) VALUES
 ('HDD жорсткі диски'),
 ('Корпуси'),
 ('Вентилятори'),
-('Комп''ютери (системні блоки)'),
-('Збірки (системні блоки)'),
-('Ноутбуки'),
-('Монітори'),
-('Миші'),
-('Клавіатури'),
-('Килими'),
-('Чохли для ноутбуків'),
-('Рюкзаки для ноутбуків')
+('Комп''ютери (системні блоки)')
 ON CONFLICT (name) DO NOTHING;
 
 -- Відеокарти --
@@ -151,12 +143,4 @@ INSERT INTO Products (name, price, description, category_id) VALUES
 ('Arctic P12 PWM PST Black', 350.00, 'Pressure-optimized 120mm fan, Great value for money', (SELECT category_id FROM Categories WHERE name = 'Вентилятори')),
 ('Corsair iCUE AF120 RGB ELITE', 1200.00, 'High-performance 120mm fan with AirGuide technology', (SELECT category_id FROM Categories WHERE name = 'Вентилятори'));
 
--- Комп'ютери (системні блоки) --
 -- Збірки (системні блоки) --
--- Ноутбуки --
--- Монітори --
--- Миші --
--- Клавіатури --
--- Килими --
--- Чохли для ноутбуків --
--- Рюкзаки для ноутбуків --
