@@ -20,6 +20,7 @@
             <th>Price</th>
             <th>Description</th>
             <th></th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -27,16 +28,19 @@
             <tr>
                 <td>@item.Name</td>
                 <td>@item.CategoryName</td>
-                <td>@item.Price.ToString("C")</td>
+                <td>@item.Price.ToString()</td>
                 <td>@item.Description</td>
                 <td>
                     <form asp-action="Delete"
                           asp-route-id="@item.ProductId"
                           method="post"
                           onsubmit="return confirm('Are you sure?');">
-                        
-                        <button type="submit" class="btn btn-danger">Delete</button>
+
+                        <button type="submit" class="btn btn-secondary">Delete</button>
                     </form>
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-secondary">Edit</a>
                 </td>
             </tr>
         }

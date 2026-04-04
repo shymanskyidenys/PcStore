@@ -8,38 +8,79 @@ namespace PcStoreApp.Controllers;
 
 public class ProductController : Controller
 {
-    private readonly ProductRepository _repo;
+    private readonly ProductRepository _productRepo;
 
-    public ProductController(ProductRepository repo) { _repo = repo; }
+    public ProductController(ProductRepository repo) { _productRepo = repo; }
 
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var products = await _repo.GetProductsAsync();
+        var products = await _productRepo.GetProductsAsync();
         return View(products);
     }
 
     [HttpGet]
     public async Task<IActionResult> Create()
     {
-        var categories = await _repo.GetCategoriesAsync();
+        var categories = await _productRepo.GetCategoriesAsync();
         
-        var viewModel = new ProductCreateViewModel();
+        var viewModel = new ProductFromViewModel();
         viewModel.Categories = categories.Select(c => new SelectListItem
         {
             Value = c.CategoryId.ToString(),
             Text = c.Name
         }).ToList();
 
-        return View(viewModel);
+        return View("ProductFrom", viewModel);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(int id)
+    {
+        var product = await _productRepo.GetProductByIdAsync(id);
+
+        if (product == null)
+        {
+            throw new Exception("No such product");
+        }
+
+        var categories = await _productRepo.GetCategoriesAsync();
+        var attributes = await _productRepo.GetAttributesByCategoryIdAsync(product.CategoryId);
+
+        var viewModel = new ProductFromViewModel
+        {
+            ProductId = product.ProductId,
+            Name = product.Name,
+            Price = product.Price,
+            Description = product.Description,
+            CategoryId = product.CategoryId,
+        };
+        viewModel.Categories = categories.Select(c => new SelectListItem
+        {
+            Value = c.CategoryId.ToString(),
+            Text = c.Name
+        }).ToList();
+        viewModel.Attributes = attributes.Select(a => new ProductFormAttributeViewModel
+        {
+            Id = a.Key.Id,
+            Name = a.Key.Name,
+            AttributeValues = a.Value.Select(v => new SelectListItem
+            {
+                Value = v.ValueId.ToString(),
+                Text = v.Value
+            }).ToList()
+        }).ToList();
+        viewModel.SelectedAtributes = product.Attributes;
+
+        return View("ProductFrom", viewModel);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(ProductCreateViewModel vm)
+    public async Task<IActionResult> Create(ProductFromViewModel vm)
     {
         if (!ModelState.IsValid) 
         {
-            var categories = await _repo.GetCategoriesAsync();
+            var categories = await _productRepo.GetCategoriesAsync();
             vm.Categories = categories.Select(c => new SelectListItem
             {
                 Value = c.CategoryId.ToString(),
@@ -56,14 +97,14 @@ public class ProductController : Controller
             CategoryId = vm.CategoryId
         };
 
-        await _repo.AddProductAsync(product);
+        await _productRepo.AddProductAsync(product);
         return RedirectToAction("Index");
     }
 
     [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
-        var deleted = await _repo.DeleteProductAsync(id);
+        var deleted = await _productRepo.DeleteProductAsync(id);
 
         if (deleted)
         {

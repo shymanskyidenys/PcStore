@@ -30,7 +30,7 @@ public class AttributesRepository
         {
             attributes.Add(new Models.Attribute
             {
-                AttributeId = reader.GetInt32(0),
+                Id = reader.GetInt32(0),
                 Name = reader.GetString(1)
             });
         }
@@ -38,7 +38,7 @@ public class AttributesRepository
         return attributes;
     }
 
-    public async Task<List<AttributeValue>> GetAttributeValuesByAttributeId(int attributeId)
+    public async Task<List<AttributeValue>> GetAttributeValuesByAttributeIdAsync(int attributeId)
     {
         var attributeValues = new List<AttributeValue>();
         using var conn = new NpgsqlConnection(_connectionString);
@@ -119,7 +119,7 @@ public class AttributesRepository
         return rowsAffected > 0;
     }
 
-    public async Task<bool> DeleteAttribute(int attributeId)
+    public async Task<bool> DeleteAttributeAsync(int attributeId)
     {
         if (attributeId <= 0)
         {
@@ -138,7 +138,7 @@ public class AttributesRepository
         return rowsAffected > 0;
     }
 
-    public async Task<bool> DeleteAttributeValue(int attributeValueId)
+    public async Task<bool> DeleteAttributeValueAsync(int attributeValueId)
     {
         if (attributeValueId <= 0)
         {

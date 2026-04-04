@@ -9,13 +9,7 @@ public class Product
     public int CategoryId { get; set; }
     public string CategoryName { get; set; } = "";
 
-    public List<ProductAttributeInfo> Attributes { get; set; } = [];
+    public Dictionary<int, int> Attributes { get; set; } = [];
 
     public List<Product> Components { get; set; } = [];
-}
-
-public class ProductAttributeInfo
-{
-    public string AttributeName { get; set; } = String.Empty;
-    public string AttributeValue { get; set; } = String.Empty;
 }

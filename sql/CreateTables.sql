@@ -30,6 +30,12 @@ CREATE TABLE Product_Attributes (
     PRIMARY KEY (product_id, value_id)
 );
 
+CREATE TABLE Category_Attributes (
+    category_id INT REFERENCES Categories(category_id),
+    attribute_id INT REFERENCES Attributes(attribute_id),
+    PRIMARY KEY (category_id, attribute_id)
+)
+
 CREATE TABLE Product_Components (
     parent_product_id INT REFERENCES Products(product_id) ON DELETE CASCADE,
     child_product_id INT REFERENCES Products(product_id),
