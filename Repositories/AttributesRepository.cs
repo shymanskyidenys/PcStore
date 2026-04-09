@@ -52,6 +52,7 @@ public class AttributesRepository
                     ORDER BY value";
 
         using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("a_id", attributeId);
         using var reader = await cmd.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())
