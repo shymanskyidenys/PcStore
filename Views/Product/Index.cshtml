@@ -31,6 +31,9 @@
                 <td>@item.Price.ToString()</td>
                 <td>@item.Description</td>
                 <td>
+                    <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-secondary">Edit</a>
+                </td>
+                <td>
                     <form asp-action="Delete"
                           asp-route-id="@item.ProductId"
                           method="post"
@@ -38,9 +41,6 @@
 
                         <button type="submit" class="btn btn-secondary">Delete</button>
                     </form>
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-secondary">Edit</a>
                 </td>
             </tr>
         }

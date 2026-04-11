@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<ProductRepository>();
+builder.Services.AddScoped<CategoryRepository>();
 
 var app = builder.Build();
 
