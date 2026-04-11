@@ -12,7 +12,7 @@ public class ProductRepository
         _connectionString = configuration.GetConnectionString("DefaultConnection")!;
     }
 
-    public async Task<IEnumerable<Product>> GetProductsAsync()
+    public async Task<IEnumerable<Product>> GetListAsync(int limit = 100, int offset = 0)
     {
         var products = new List<Product>();
         using var conn = new NpgsqlConnection(_connectionString);
@@ -26,9 +26,13 @@ public class ProductRepository
                    c.name as CategoryName 
             FROM Products p 
             LEFT JOIN Categories c ON p.category_id = c.category_id 
-            ORDER BY p.product_id DESC";
+            ORDER BY p.product_id DESC
+            LIMIT @limit
+            OFFSET @offset";
 
         using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("limit", limit);
+        cmd.Parameters.AddWithValue("offset", offset);
         using var reader = await cmd.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())
@@ -45,7 +49,7 @@ public class ProductRepository
         return products;
     }
 
-    public async Task<Product?> GetProductByIdAsync(int id)
+    public async Task<Product?> GetByIdAsync(int id)
     {
         if (id <= 0)
         {
@@ -166,7 +170,7 @@ public class ProductRepository
         return result;
     }
 
-    public async Task<bool> AddProductAsync(Product product)
+    public async Task<bool> AddAsync(Product product)
     {
         if (product == null || string.IsNullOrWhiteSpace(product.Name))
         {
@@ -189,7 +193,7 @@ public class ProductRepository
         return rowsAffected > 0;
     }
 
-    public async Task<bool> DeleteProductAsync(int productId)
+    public async Task<bool> DeleteAsync(int productId)
     {
         if (productId <= 0)
         {

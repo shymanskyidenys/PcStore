@@ -38,7 +38,12 @@ public class CategoryController : Controller
             Name = vm.Name!
         };
 
-        await _categoryRepo.AddAsync(category);
+        bool success = await _categoryRepo.AddAsync(category);
+        if (success)
+        {
+            TempData["Message"] = "Category added successfully!";
+        }
+
         return RedirectToAction("Index");
     }
 
@@ -54,14 +59,15 @@ public class CategoryController : Controller
 
         var vm = new CategoryFormViewModel
         {
+            Id = id,
             Name = category.Name
         };
 
         return View("CategoryForm", vm);
     }
 
-    [HttpPut]
-    public async Task<IActionResult> Update(CategoryFormViewModel vm)
+    [HttpPost]
+    public async Task<IActionResult> Edit(CategoryFormViewModel vm)
     {
         if (!ModelState.IsValid)
         {
@@ -70,13 +76,20 @@ public class CategoryController : Controller
 
         var category = new Category
         {
+            Id = vm.Id ?? 0,
             Name = vm.Name!
         };
-        await _categoryRepo.AddAsync(category);
+
+        bool success = await _categoryRepo.UpdateAsync(category);
+        if (success)
+        {
+            TempData["Message"] = "Category saved successfully!";
+        }
+
         return RedirectToAction("Index");
     }
 
-    [HttpDelete]
+    [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
         bool deleted = await _categoryRepo.DeleteCategoryAsync(id);

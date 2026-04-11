@@ -15,6 +15,7 @@
 <table class="table">
     <thead>
         <tr>
+            <th>Id</th>
             <th>Name</th>
             <th>Category</th>
             <th>Price</th>
@@ -26,6 +27,7 @@
     <tbody>
         @foreach (Product item in Model) {
             <tr>
+                <td>@item.ProductId</td>
                 <td>@item.Name</td>
                 <td>@item.CategoryName</td>
                 <td>@item.Price.ToString()</td>

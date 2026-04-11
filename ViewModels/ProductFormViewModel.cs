@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace PcStoreApp.ViewModels;
 
-public class ProductFromViewModel
+public class ProductFormViewModel
 {
     public int ProductId { get; set; }
     public string Name { get; set; } = "";

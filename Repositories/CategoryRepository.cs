@@ -57,6 +57,7 @@ public class CategoryRepository
             FROM Categories c
             LEFT JOIN Products p ON c.category_id = p.category_id
             GROUP BY c.category_id, c.name
+            ORDER BY c.category_id DESC
             LIMIT @limit
             OFFSET @offset";
 
@@ -99,7 +100,7 @@ public class CategoryRepository
         return rowsAffected > 0;
     }
 
-    public async Task<bool> UpdateCategoryAsync(Category category)
+    public async Task<bool> UpdateAsync(Category category)
     {
         if (category == null || category.Id <= 0 || string.IsNullOrWhiteSpace(category.Name))
         {

@@ -15,7 +15,7 @@ public class ProductController : Controller
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var products = await _productRepo.GetProductsAsync();
+        var products = await _productRepo.GetListAsync();
         return View(products);
     }
 
@@ -24,7 +24,7 @@ public class ProductController : Controller
     {
         var categories = await _productRepo.GetCategoriesAsync();
 
-        var viewModel = new ProductFromViewModel
+        var viewModel = new ProductFormViewModel
         {
             Categories = categories.Select(c => new SelectListItem
             {
@@ -37,7 +37,7 @@ public class ProductController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(ProductFromViewModel vm)
+    public async Task<IActionResult> Create(ProductFormViewModel vm)
     {
         if (!ModelState.IsValid) 
         {
@@ -59,14 +59,19 @@ public class ProductController : Controller
             CategoryId = vm.CategoryId
         };
 
-        await _productRepo.AddProductAsync(product);
+        bool success = await _productRepo.AddAsync(product);
+        if (success)
+        {
+            TempData["Message"] = "The product has been added successfully!";
+        }
+
         return RedirectToAction("Index");
     }
 
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        var product = await _productRepo.GetProductByIdAsync(id);
+        var product = await _productRepo.GetByIdAsync(id);
 
         if (product == null)
         {
@@ -76,7 +81,7 @@ public class ProductController : Controller
         var categories = await _productRepo.GetCategoriesAsync();
         var attributes = await _productRepo.GetAttributesByCategoryIdAsync(product.CategoryId);
 
-        var viewModel = new ProductFromViewModel
+        var viewModel = new ProductFormViewModel
         {
             ProductId = product.ProductId,
             Name = product.Name,
@@ -104,10 +109,17 @@ public class ProductController : Controller
         return View("ProductFrom", viewModel);
     }
 
+    [HttpPost]
+    public async Task<IActionResult> Edit(ProductFormViewModel vm)
+    {
+        TempData["Message"] = "Editing is not yet implemented.";
+        return RedirectToAction(nameof(Index));
+    }
+
     [HttpDelete]
     public async Task<IActionResult> Delete(int id)
     {
-        bool deleted = await _productRepo.DeleteProductAsync(id);
+        bool deleted = await _productRepo.DeleteAsync(id);
 
         if (deleted)
         {
