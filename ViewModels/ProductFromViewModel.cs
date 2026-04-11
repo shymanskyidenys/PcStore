@@ -10,8 +10,8 @@ public class ProductFromViewModel
     public string Description { get; set; } = "";
     public int CategoryId { get; set; }
 
-    public List<SelectListItem> Categories { get; set; } = [];
-    public List<ProductFormAttributeViewModel> Attributes { get; set; } = [];
+    public IEnumerable<SelectListItem> Categories { get; set; } = [];
+    public IEnumerable<ProductFormAttributeViewModel> Attributes { get; set; } = [];
     public Dictionary<int, int> SelectedAtributes { get; set; } = [];
 
     public bool IsEdit => ProductId > 0;

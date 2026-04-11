@@ -1,5 +1,3 @@
-using System.Data.SqlTypes;
-using System.Runtime.InteropServices;
 using Npgsql;
 using PcStoreApp.Models;
 
@@ -14,7 +12,7 @@ public class ProductRepository
         _connectionString = configuration.GetConnectionString("DefaultConnection")!;
     }
 
-    public async Task<List<Product>> GetProductsAsync()
+    public async Task<IEnumerable<Product>> GetProductsAsync()
     {
         var products = new List<Product>();
         using var conn = new NpgsqlConnection(_connectionString);
@@ -51,7 +49,7 @@ public class ProductRepository
     {
         if (id <= 0)
         {
-            throw new ArgumentException("Product id mast be greater then 0");
+            return null;
         }
 
         Product? product = null;
@@ -118,7 +116,7 @@ public class ProductRepository
     {
         if (categoryId <= 0)
         {
-            throw new ArgumentException("Category id mast be greater then 0");
+            return [];
         }
 
         using var conn = new NpgsqlConnection(_connectionString);
@@ -170,14 +168,9 @@ public class ProductRepository
 
     public async Task<bool> AddProductAsync(Product product)
     {
-        if (product == null)
+        if (product == null || string.IsNullOrWhiteSpace(product.Name))
         {
-            throw new ArgumentNullException("Product cannot be null");
-        }
-
-        if (string.IsNullOrWhiteSpace(product.Name))
-        {
-            throw new ArgumentException("Product name is required", nameof(product.Name));
+            return false;
         }
 
         using var conn = new NpgsqlConnection(_connectionString);
@@ -200,7 +193,7 @@ public class ProductRepository
     {
         if (productId <= 0)
         {
-            throw new ArgumentException("Id product mast be greater then 0");
+            return false;
         }
 
         using var conn = new NpgsqlConnection(_connectionString);
@@ -215,7 +208,7 @@ public class ProductRepository
         return rowsAffected > 0;
     }
 
-    public async Task<List<Category>> GetCategoriesAsync()
+    public async Task<IEnumerable<Category>> GetCategoriesAsync()
     {
         var categories = new List<Category>();
         using var conn = new NpgsqlConnection(_connectionString);
@@ -232,7 +225,7 @@ public class ProductRepository
         while (await reader.ReadAsync())
         {
             categories.Add(new Category { 
-                CategoryId = reader.GetInt32(0),
+                Id = reader.GetInt32(0),
                 Name = reader.GetString(1)
             });
         }
