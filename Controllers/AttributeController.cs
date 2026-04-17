@@ -1,29 +1,29 @@
 using Microsoft.AspNetCore.Mvc;
-using PcStoreApp.Repositories;
+using PcStoreApp.Services;
 using PcStoreApp.ViewModels;
 
 namespace PcStoreApp.Controllers;
 
 public class AttributeController : Controller
 {
-    private readonly AttributesRepository _attributeRepo;
+    private readonly AttributeService _attributeService;
 
-    public AttributeController(AttributesRepository attributesRepo)
+    public AttributeController(AttributeService attributeService)
     {
-        _attributeRepo = attributesRepo;
+        _attributeService = attributeService;
     }
 
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var attributes = await _attributeRepo.GetAttributesListAsync();
-        return View(attributes);
+        var viewModel = await _attributeService.GetAttributeListAsync();
+        return View(viewModel);
     }
 
     [HttpGet]
-    public async Task<IActionResult> Create()
+    public IActionResult Create()
     {
-        var viewModel = new AttributeFormViewModel();
+        var viewModel = _attributeService.GetCreateFormData();
         return View("AttributeForm", viewModel);
     }
 
@@ -35,37 +35,25 @@ public class AttributeController : Controller
             return View("AttributeForm", vm);
         }
 
-        var attribute = new Models.Attribute
-        {
-            Name = vm.Name!
-        };
-
-        bool success = await _attributeRepo.SaveAttributeAsync(attribute);
+        bool success = await _attributeService.SaveAttributeAsync(vm);
         if (success)
         {
             TempData["Message"] = "Attribute added successfully!";
         }
 
-        return RedirectToAction("Index");
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        var attribute = await _attributeRepo.GetAttributeByIdAsync(id);
-
-        if (attribute == null)
+        var viewModel = await _attributeService.GetEditFormDataAsync(id);
+        if (viewModel == null)
         {
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
 
-        var vm = new AttributeFormViewModel
-        {
-            Id = attribute.Id,
-            Name = attribute.Name
-        };
-
-        return View("AttributeForm", vm);
+        return View("AttributeForm", viewModel);
     }
 
     [HttpPost]
@@ -73,21 +61,27 @@ public class AttributeController : Controller
     {
         if (!ModelState.IsValid)
         {
-            return View("CategoryForm", vm);
+            return View("AttributeForm", vm);
         }
 
-        var attribute = new Models.Attribute
-        {
-            Id = vm.Id ?? 0,
-            Name = vm.Name!
-        };
-
-        bool success = await _attributeRepo.SaveAttributeAsync(attribute);
+        bool success = await _attributeService.SaveAttributeAsync(vm);
         if (success)
         {
             TempData["Message"] = "Attribute saved successfully!";
         }
 
-        return RedirectToAction("Index");
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Delete(int id)
+    {
+        bool deleted = await _attributeService.DeleteAttributeAsync(id);
+        if (deleted)
+        {
+            TempData["Message"] = "Attribute deleted successfully!";
+        }
+
+        return RedirectToAction(nameof(Index));
     }
 }

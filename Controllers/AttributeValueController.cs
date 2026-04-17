@@ -1,29 +1,30 @@
 using Microsoft.AspNetCore.Mvc;
-using PcStoreApp.Models;
-using PcStoreApp.Repositories;
-using PcStoreApp.ViewModels.Attribute;
+using PcStoreApp.Services;
+using PcStoreApp.ViewModels;
+
+namespace PcStoreApp.Controllers;
 
 public class AttributeValueController : Controller
 {
-    private readonly AttributesRepository _attributeRepo;
+    private readonly AttributeService _attributeService;
 
-    public AttributeValueController(AttributesRepository attributesRepo)
+    public AttributeValueController(AttributeService attributeService)
     {
-        _attributeRepo = attributesRepo;
+        _attributeService = attributeService;
     }
 
     [HttpGet]
     public async Task<IActionResult> Index(int attributeId)
     {
-        var attributeValues = await _attributeRepo.GetAttributeValuesByAttributeIdAsync(attributeId);
-        return View(attributeValues);
+        var viewModel = await _attributeService.GetAttributeValueListAsync(attributeId);
+        return View(viewModel);
     }
 
     [HttpGet]
-    public async Task<IActionResult> Create()
+    public async Task<IActionResult> Create(int attributeId)
     {
-        var vm = new AttributeValueFormViewModel();
-        return View("AttributeForm", vm);
+        var viewModel = await _attributeService.GetCreateValueFormDataAsync(attributeId);
+        return View("AttributeValueForm", viewModel);
     }
 
     [HttpPost]
@@ -31,42 +32,29 @@ public class AttributeValueController : Controller
     {
         if (!ModelState.IsValid)
         {
-            return View("AttributeForm", vm);
+            vm = await _attributeService.GetCreateValueFormDataAsync(vm.AttributeId);
+            return View("AttributeValueForm", vm);
         }
 
-        var attributeValue = new AttributeValue
-        {
-            AttributeId = vm.AttributeId,
-            Value = vm.Value!
-        };
-
-        bool success = await _attributeRepo.SaveAttributeValueAsync(attributeValue);
+        bool success = await _attributeService.SaveAttributeValueAsync(vm);
         if (success)
         {
             TempData["Message"] = "Attribute value added successfully!";
         }
 
-        return RedirectToAction("Index");
+        return RedirectToAction(nameof(Index), new { attributeId = vm.AttributeId });
     }
 
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        var attributeValue = await _attributeRepo.GetAttributeValueByIdAsync(id);
-
-        if (attributeValue == null)
+        var viewModel = await _attributeService.GetEditValueFormDataAsync(id);
+        if (viewModel == null)
         {
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index), new { attributeId = 0 });
         }
 
-        var vm = new AttributeValueFormViewModel
-        {
-            ValueId = attributeValue.ValueId,
-            AttributeId = attributeValue.AttributeId,
-            Value = attributeValue.Value
-        };
-
-        return View("AttributeForm", vm);
+        return View("AttributeValueForm", viewModel);
     }
 
     [HttpPost]
@@ -74,21 +62,32 @@ public class AttributeValueController : Controller
     {
         if (!ModelState.IsValid)
         {
-            return View("CategoryForm", vm);
+            var refreshedVm = await _attributeService.GetEditValueFormDataAsync(vm.ValueId ?? 0);
+            if (refreshedVm == null)
+            {
+                return RedirectToAction(nameof(Index), new { attributeId = vm.AttributeId });
+            }
+            return View("AttributeValueForm", refreshedVm);
         }
 
-        var attributeValue = new AttributeValue
-        {
-            AttributeId = vm.AttributeId,
-            Value = vm.Value!
-        };
-
-        bool success = await _attributeRepo.SaveAttributeValueAsync(attributeValue);
+        bool success = await _attributeService.SaveAttributeValueAsync(vm);
         if (success)
         {
             TempData["Message"] = "Attribute value saved successfully!";
         }
 
-        return RedirectToAction("Index");
+        return RedirectToAction(nameof(Index), new { attributeId = vm.AttributeId });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Delete(int id, int attributeId)
+    {
+        bool deleted = await _attributeService.DeleteAttributeValueAsync(id);
+        if (deleted)
+        {
+            TempData["Message"] = "Attribute value deleted successfully!";
+        }
+
+        return RedirectToAction(nameof(Index), new { attributeId });
     }
 }

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace PcStoreApp.ViewModels.Attribute;
+namespace PcStoreApp.ViewModels;
 
 public class AttributeValueFormViewModel
 {

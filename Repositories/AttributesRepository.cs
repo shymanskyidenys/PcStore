@@ -136,7 +136,7 @@ public class AttributesRepository
                    attribute_id,
                    value
             FROM AttributeValues
-            WHERE id_attribute = @a_id
+            WHERE attribute_id = @a_id
             ORDER BY value";
 
         using var cmd = new NpgsqlCommand(sql, conn);
@@ -154,6 +154,60 @@ public class AttributesRepository
         }
 
         return attributeValues;
+    }
+
+    public async Task<Dictionary<Models.Attribute, List<AttributeValue>>> GetByCategoryIdAsync(int categoryId)
+    {
+        if (categoryId <= 0)
+        {
+            return new Dictionary<Models.Attribute, List<AttributeValue>>();
+        }
+
+        using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        var sql = @"
+            SELECT a.attribute_id,
+                a.name,
+                av.value_id,
+                av.value
+            FROM Category_Attributes ca
+            LEFT JOIN Attributes a ON a.attribute_id = ca.attribute_id
+            LEFT JOIN AttributeValues av ON av.attribute_id = a.attribute_id
+            WHERE ca.category_id = @c_id
+            ORDER BY a.name, av.value";
+
+        using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("c_id", categoryId);
+
+        var result = new Dictionary<Models.Attribute, List<AttributeValue>>();
+        using var reader = await cmd.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            var attrKey = result.Keys.FirstOrDefault(a => a.Id == reader.GetInt32(0));
+            if (attrKey == null)
+            {
+                attrKey = new Models.Attribute
+                {
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1)
+                };
+                result.Add(attrKey, new List<AttributeValue>());
+            }
+
+            if (!reader.IsDBNull(2))
+            {
+                result[attrKey].Add(new AttributeValue
+                {
+                    ValueId = reader.GetInt32(2),
+                    AttributeId = attrKey.Id,
+                    Value = reader.GetString(3)
+                });
+            }
+        }
+
+        return result;
     }
 
     public async Task<bool> SaveAttributeAsync(Models.Attribute attribute)

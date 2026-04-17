@@ -1,4 +1,4 @@
-namespace PcStoreApp.ViewModels.Attribute;
+namespace PcStoreApp.ViewModels;
 
 public class AttributeValueListItemViewModel
 {
