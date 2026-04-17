@@ -59,7 +59,7 @@ public class CategoryController : Controller
 
         var vm = new CategoryFormViewModel
         {
-            Id = id,
+            Id = category.Id,
             Name = category.Name
         };
 

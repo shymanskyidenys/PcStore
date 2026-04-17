@@ -59,7 +59,7 @@ public class ProductController : Controller
             CategoryId = vm.CategoryId
         };
 
-        bool success = await _productRepo.AddAsync(product);
+        bool success = await _productRepo.SaveAsync(product);
         if (success)
         {
             TempData["Message"] = "The product has been added successfully!";
@@ -112,11 +112,42 @@ public class ProductController : Controller
     [HttpPost]
     public async Task<IActionResult> Edit(ProductFormViewModel vm)
     {
-        TempData["Message"] = "Editing is not yet implemented.";
+        if (!ModelState.IsValid)
+        {
+            var cats = await _productRepo.GetCategoriesAsync();
+            vm.Categories = cats.Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(), Text = c.Name
+            });
+            var attrs = await _productRepo.GetAttributesByCategoryIdAsync(vm.CategoryId);
+            vm.Attributes = attrs.Select(a => new ProductFormAttributeViewModel
+            {
+                Id = a.Key.Id, Name = a.Key.Name,
+                AttributeValues = a.Value.Select(v => new SelectListItem
+                {
+                    Value = v.ValueId.ToString(), Text = v.Value
+                })
+            });
+            return View("ProductFrom", vm);
+        }
+
+        var product = new Product
+        {
+            ProductId = vm.ProductId,
+            Name = vm.Name,
+            Price = vm.Price,
+            Description = vm.Description,
+            CategoryId = vm.CategoryId,
+            Attributes = vm.SelectedAtributes
+        };
+
+        bool success = await _productRepo.SaveAsync(product);
+        if (success) TempData["Message"] = "Product updated successfully!";
+
         return RedirectToAction(nameof(Index));
     }
 
-    [HttpDelete]
+    [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
         bool deleted = await _productRepo.DeleteAsync(id);
