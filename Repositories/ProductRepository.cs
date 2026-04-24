@@ -12,7 +12,7 @@ public class ProductRepository
         _connectionString = configuration.GetConnectionString("DefaultConnection")!;
     }
 
-    public async Task<IEnumerable<Product>> GetProductsAsync()
+    public async Task<IEnumerable<Product>> GetListAsync(int limit = 100, int offset = 0)
     {
         var products = new List<Product>();
         using var conn = new NpgsqlConnection(_connectionString);
@@ -26,9 +26,13 @@ public class ProductRepository
                    c.name as CategoryName 
             FROM Products p 
             LEFT JOIN Categories c ON p.category_id = c.category_id 
-            ORDER BY p.product_id DESC";
+            ORDER BY p.product_id DESC
+            LIMIT @limit
+            OFFSET @offset";
 
         using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("limit", limit);
+        cmd.Parameters.AddWithValue("offset", offset);
         using var reader = await cmd.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())
@@ -45,7 +49,7 @@ public class ProductRepository
         return products;
     }
 
-    public async Task<Product?> GetProductByIdAsync(int id)
+    public async Task<Product?> GetByIdAsync(int id)
     {
         if (id <= 0)
         {
@@ -56,7 +60,7 @@ public class ProductRepository
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        var sql1 = @"
+        var selectProductQuery = @"
             SELECT p.product_id,
                    p.name,
                    p.price,
@@ -67,7 +71,7 @@ public class ProductRepository
             LEFT JOIN Categories c ON c.category_id = p.category_id
             WHERE product_id = @p_id";
 
-        using (var cmd = new NpgsqlCommand(sql1, conn))
+        using (var cmd = new NpgsqlCommand(selectProductQuery, conn))
         {
             cmd.Parameters.AddWithValue("p_id", id);
             using var reader = await cmd.ExecuteReaderAsync();
@@ -90,7 +94,7 @@ public class ProductRepository
             return null;
         }
 
-        var sql2 = @"
+        var selectAttributesQuery = @"
             SELECT a.attribute_id,
                    av.value_id
             FROM Product_Attributes pa
@@ -98,75 +102,21 @@ public class ProductRepository
             LEFT JOIN Attributes a ON av.attribute_id = a.attribute_id
             WHERE pa.product_id = @p_id";
 
-        using (var cmd = new NpgsqlCommand(sql2, conn))
+        using (var cmd = new NpgsqlCommand(selectAttributesQuery, conn))
         {
             cmd.Parameters.AddWithValue("p_id", id);
             using var reader = await cmd.ExecuteReaderAsync();
             
             while (await reader.ReadAsync())
             {
-                product.Attributes.Add(reader.GetInt32(1), reader.GetInt32(3));
+                product.Attributes.Add(reader.GetInt32(0), reader.GetInt32(1));
             }
         }
 
         return product;
     }
 
-    public async Task<Dictionary<Models.Attribute, List<AttributeValue>>> GetAttributesByCategoryIdAsync(int categoryId)
-    {
-        if (categoryId <= 0)
-        {
-            return [];
-        }
-
-        using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
-
-        var sql = @"
-            SELECT a.attribute_id,
-                   a.name,
-                   av.value_id,
-                   av.value
-            FROM Category_Attributes ca
-            LEFT JOIN Attributes a ON a.attribute_id = ca.attribute_id
-            LEFT JOIN AttributeValues av ON av.attribute_id = a.attribute_id
-            WHERE ca.category_id = @c_id";
-
-        using var cmd = new NpgsqlCommand(sql, conn);
-        cmd.Parameters.AddWithValue("c_id", categoryId);
-
-        var result = new Dictionary<Models.Attribute, List<AttributeValue>>();
-        using var reader = await cmd.ExecuteReaderAsync();
-
-        while (await reader.ReadAsync())
-        {
-            var attrKey = result.Keys.FirstOrDefault(a => a.Id == reader.GetInt32(0));
-            if (attrKey == null)
-            {
-                attrKey = new Models.Attribute
-                {
-                    Id = reader.GetInt32(0),
-                    Name = reader.GetString(1)
-                };
-
-                result.Add(attrKey, new List<AttributeValue>());
-            }
-
-            if (!reader.IsDBNull(2))
-            {
-                result[attrKey].Add(new AttributeValue
-                {
-                    ValueId = reader.GetInt32(2),
-                    AttributeId = attrKey.Id,
-                    Value = reader.GetString(3)
-                });
-            }
-        }
-
-        return result;
-    }
-
-    public async Task<bool> AddProductAsync(Product product)
+    public async Task<bool> SaveAsync(Product product)
     {
         if (product == null || string.IsNullOrWhiteSpace(product.Name))
         {
@@ -175,21 +125,76 @@ public class ProductRepository
 
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
+        using var transaction = await conn.BeginTransactionAsync();
 
-        var sql = @"INSERT INTO Products (name, price, description, category_id) 
-                    VALUES (@n, @p, @d, @c)";
+        try
+        {
+            int productId;
 
-        using var cmd = new NpgsqlCommand(sql, conn);
-        cmd.Parameters.AddWithValue("n", product.Name);
-        cmd.Parameters.AddWithValue("p", product.Price);
-        cmd.Parameters.AddWithValue("d", (object)product.Description ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("c", product.CategoryId);
+            if (product.ProductId <= 0)
+            {
+                var sql = @"
+                    INSERT INTO Products (name, price, description, category_id)
+                    VALUES (@n, @p, @d, @c)
+                    RETURNING product_id";
 
-        int rowsAffected = await cmd.ExecuteNonQueryAsync();
-        return rowsAffected > 0;
+                using var cmd = new NpgsqlCommand(sql, conn, transaction);
+                cmd.Parameters.AddWithValue("n", product.Name);
+                cmd.Parameters.AddWithValue("p", product.Price);
+                cmd.Parameters.AddWithValue("d", (object?)product.Description ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("c", product.CategoryId);
+
+                productId = (int)(await cmd.ExecuteScalarAsync())!;
+            }
+            else
+            {
+                var sql = @"
+                    UPDATE Products 
+                    SET name = @p,
+                        description = @n,
+                        price = @d,
+                        category_id = @c
+                    WHERE product_id = @id";
+
+                using var cmd = new NpgsqlCommand(sql, conn, transaction);
+                cmd.Parameters.AddWithValue("n", product.Name);
+                cmd.Parameters.AddWithValue("p", product.Price);
+                cmd.Parameters.AddWithValue("d", (object?)product.Description ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("c", product.CategoryId);
+                cmd.Parameters.AddWithValue("id", product.ProductId);
+
+                await cmd.ExecuteNonQueryAsync();
+                productId = product.ProductId;
+            }
+
+            using (var cmd = new NpgsqlCommand(
+                "DELETE FROM Product_Attributes WHERE product_id = @id", conn, transaction))
+            {
+                cmd.Parameters.AddWithValue("id", productId);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            foreach (var kv in product.Attributes)
+            {
+                using var cmd = new NpgsqlCommand(
+                    "INSERT INTO Product_Attributes (product_id, value_id) VALUES (@p, @v)",
+                    conn, transaction);
+                cmd.Parameters.AddWithValue("p", productId);
+                cmd.Parameters.AddWithValue("v", kv.Value);
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            return false;
+        }
     }
 
-    public async Task<bool> DeleteProductAsync(int productId)
+    public async Task<bool> DeleteAsync(int productId)
     {
         if (productId <= 0)
         {
@@ -206,30 +211,5 @@ public class ProductRepository
 
         int rowsAffected = await cmd.ExecuteNonQueryAsync();
         return rowsAffected > 0;
-    }
-
-    public async Task<IEnumerable<Category>> GetCategoriesAsync()
-    {
-        var categories = new List<Category>();
-        using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
-
-        var sql = @"SELECT category_id,
-                           name
-                    FROM Categories
-                    ORDER BY name";
-
-        using var cmd = new NpgsqlCommand(sql, conn);
-        using var reader = await cmd.ExecuteReaderAsync();
-
-        while (await reader.ReadAsync())
-        {
-            categories.Add(new Category { 
-                Id = reader.GetInt32(0),
-                Name = reader.GetString(1)
-            });
-        }
-
-        return categories;
     }
 }

@@ -1,34 +1,49 @@
-﻿@model IEnumerable<Category>
+﻿@model CategoryListViewModel
 
-<h2>Categories</h2>
-
-<table class="table">
-    <thead>
-        <th>Id</th>
-        <th>Name</th>
-        <th>ProductCount</th>
-        <th></th>
-        <th></th>
-    </thead>
-    <tbody>
-        @foreach (Category item in Model) {
+<div class="container mt-4">
+    <h2>Categories</h2>
+    
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    <a asp-action="Create" class="btn btn-primary mb-3">Add category</a>
+    
+    <table class="table table-striped">
+        <thead>
             <tr>
-                <td>@item.Id</td>
-                <td>@item.Name</td>
-                <td>@item.ProductCount</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
-                </td>
-                <td>
-                    <form asp-action="Delete"
-                        asp-route-id="@item.Id"
-                        method="post"
-                        onsubmit="return confrim('are you shure?')">
-                        
-                        <button type="submit" class="btn-btn-secondary">Delete</button>
-                    </form>
-                </td>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Product Count</th>
+                <th></th>
+                <th></th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Categories)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Name</td>
+                    <td>@item.ProductCount</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-secondary">Edit</a>
+                    </td>
+                    <td>
+                        <form asp-action="Delete"
+                              asp-route-id="@item.Id"
+                              method="post"
+                              class="d-inline"
+                              onsubmit="return confirm('Are you sure?')">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
