@@ -1,50 +1,53 @@
-﻿@model IEnumerable<Product>
+﻿@model ProductListViewModel
 
-<h2>Products</h2>
-
-@if (TempData["Message"] != null)
-{
-    <div class="alert alert-success" role="alert">
-        @TempData["Message"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-<a asp-action="Create" class="btn btn-primary">Add product</a>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Id</th>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Price</th>
-            <th>Description</th>
-            <th></th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (Product item in Model) {
+<div class="container mt-4">
+    <h2>Products</h2>
+    
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    <a asp-action="Create" class="btn btn-primary mb-3">Add product</a>
+    
+    <table class="table table-striped">
+        <thead>
             <tr>
-                <td>@item.ProductId</td>
-                <td>@item.Name</td>
-                <td>@item.CategoryName</td>
-                <td>@item.Price.ToString()</td>
-                <td>@item.Description</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-secondary">Edit</a>
-                </td>
-                <td>
-                    <form asp-action="Delete"
-                          asp-route-id="@item.ProductId"
-                          method="post"
-                          onsubmit="return confirm('Are you sure?');">
-
-                        <button type="submit" class="btn btn-secondary">Delete</button>
-                    </form>
-                </td>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Description</th>
+                <th></th>
+                <th></th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Products)
+            {
+                <tr>
+                    <td>@item.ProductId</td>
+                    <td>@item.Name</td>
+                    <td>@item.CategoryName</td>
+                    <td>$@item.Price.ToString("N2")</td>
+                    <td>@item.Description</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-sm btn-secondary">Edit</a>
+                    </td>
+                    <td>
+                        <form asp-action="Delete"
+                              asp-route-id="@item.ProductId"
+                              method="post"
+                              class="d-inline"
+                              onsubmit="return confirm('Are you sure?');">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

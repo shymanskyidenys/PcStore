@@ -14,6 +14,11 @@ public class CategoryRepository
 
     public async Task<Category?> GetByIdAsync(int id)
     {
+        if (id <= 0)
+        {
+            return null;
+        }
+
         using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
 

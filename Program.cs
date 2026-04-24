@@ -1,4 +1,5 @@
 using PcStoreApp.Repositories;
+using PcStoreApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,11 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<ProductRepository>();
 builder.Services.AddScoped<CategoryRepository>();
+builder.Services.AddScoped<AttributesRepository>();
+
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<AttributeService>();
 
 var app = builder.Build();
 

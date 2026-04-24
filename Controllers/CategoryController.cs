@@ -1,27 +1,29 @@
 using Microsoft.AspNetCore.Mvc;
-using PcStoreApp.Models;
-using PcStoreApp.Repositories;
+using PcStoreApp.Services;
 using PcStoreApp.ViewModels;
+
+namespace PcStoreApp.Controllers;
 
 public class CategoryController : Controller
 {
-    private readonly CategoryRepository _categoryRepo;
+    private readonly CategoryService _categoryService;
 
-    public CategoryController(CategoryRepository repo)
+    public CategoryController(CategoryService categoryService)
     {
-        _categoryRepo = repo;
-    }
-
-    public async Task<ActionResult> Index()
-    {
-        var categories = await _categoryRepo.GetListAsync();
-        return View(categories);
+        _categoryService = categoryService;
     }
 
     [HttpGet]
-    public async Task<IActionResult> Create()
+    public async Task<IActionResult> Index()
     {
-        var viewModel = new CategoryFormViewModel();
+        var viewModel = await _categoryService.GetCategoryListAsync();
+        return View(viewModel);
+    }
+
+    [HttpGet]
+    public IActionResult Create()
+    {
+        var viewModel = _categoryService.GetCreateFormData();
         return View("CategoryForm", viewModel);
     }
 
@@ -33,37 +35,25 @@ public class CategoryController : Controller
             return View("CategoryForm", vm);
         }
 
-        var category = new Category
-        {
-            Name = vm.Name!
-        };
-
-        bool success = await _categoryRepo.AddAsync(category);
+        bool success = await _categoryService.SaveCategoryAsync(vm);
         if (success)
         {
             TempData["Message"] = "Category added successfully!";
         }
 
-        return RedirectToAction("Index");
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        var category = await _categoryRepo.GetByIdAsync(id);
-
-        if (category == null)
+        var viewModel = await _categoryService.GetEditFormDataAsync(id);
+        if (viewModel == null)
         {
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
 
-        var vm = new CategoryFormViewModel
-        {
-            Id = id,
-            Name = category.Name
-        };
-
-        return View("CategoryForm", vm);
+        return View("CategoryForm", viewModel);
     }
 
     [HttpPost]
@@ -74,26 +64,19 @@ public class CategoryController : Controller
             return View("CategoryForm", vm);
         }
 
-        var category = new Category
-        {
-            Id = vm.Id ?? 0,
-            Name = vm.Name!
-        };
-
-        bool success = await _categoryRepo.UpdateAsync(category);
+        bool success = await _categoryService.SaveCategoryAsync(vm);
         if (success)
         {
             TempData["Message"] = "Category saved successfully!";
         }
 
-        return RedirectToAction("Index");
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
-        bool deleted = await _categoryRepo.DeleteCategoryAsync(id);
-
+        bool deleted = await _categoryService.DeleteCategoryAsync(id);
         if (deleted)
         {
             TempData["Message"] = "Category deleted successfully!";
