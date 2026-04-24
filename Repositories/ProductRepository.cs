@@ -150,9 +150,9 @@ public class ProductRepository
             {
                 var sql = @"
                     UPDATE Products 
-                    SET name = @p,
-                        description = @n,
-                        price = @d,
+                    SET name = @n,
+                        price = @p,
+                        description = @d,
                         category_id = @c
                     WHERE product_id = @id";
 

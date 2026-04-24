@@ -6,5 +6,5 @@ public class CategoryFormViewModel
     public string? Name { get; set; }
 
     public bool IsEdit => Id.HasValue && Id > 0;
-    public string Title => IsEdit ? $"Edit categoty {Name}" : "Add new category";
+    public string Title => IsEdit ? $"Edit category {Name}" : "Add new category";
 }
